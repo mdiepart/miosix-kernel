@@ -78,7 +78,7 @@ public:
         RCC->APB1LENR |= RCC_APB1LENR_TIM5EN;
         RCC_SYNC();
         DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_TIM5; //Stop while debugging
-        #elif defined(_ARCH_CORTEXM4_STM32L4)
+        #elif defined(_ARCH_CORTEXM4_STM32L4) || defined(_ARCH_CORTEXM4_STM32G4)
         RCC->APB1ENR1 |= RCC_APB1ENR1_TIM5EN;
         RCC_SYNC();
         DBGMCU->APB1FZR1 |= DBGMCU_APB1FZR1_DBG_TIM5_STOP; //Stop while debugging

@@ -500,7 +500,8 @@ void STM32Serial::commonInit(int id, int baudrate, GpioPin tx, GpioPin rx,
     //STM32F0 does not have ppre1 and ppre2, in this case the variables are not
     //defined in order to avoid "unused variable" warning
     #if defined(_ARCH_CORTEXM3_STM32F1)   || defined(_ARCH_CORTEXM3_STM32L1) \
-     || defined(_ARCH_CORTEXM4_STM32F3) || defined(_ARCH_CORTEXM4_STM32L4)
+     || defined(_ARCH_CORTEXM4_STM32F3) || defined(_ARCH_CORTEXM4_STM32L4)   \
+     || defined(_ARCH_CORTEXM4_STM32G4)
     const unsigned int ppre1=8;
     const unsigned int ppre2=11;
     #elif !defined(_ARCH_CORTEXM7_STM32H7) && !defined(_ARCH_CORTEXM0_STM32F0)
@@ -569,10 +570,10 @@ void STM32Serial::commonInit(int id, int baudrate, GpioPin tx, GpioPin rx,
         case 2:
             port=USART2;
             #ifndef _ARCH_CORTEXM7_STM32H7
-            #ifndef _ARCH_CORTEXM4_STM32L4
-            RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-            #else  //_ARCH_CORTEXM4_STM32L4
+            #if defined(_ARCH_CORTEXM4_STM32L4) || defined(_ARCH_CORTEXM4_STM32G4)
             RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN;
+            #else  //_ARCH_CORTEXM4_STM32L4
+            RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
             #endif //_ARCH_CORTEXM4_STM32L4
             #else  //_ARCH_CORTEXM7_STM32H7
             RCC->APB1LENR |= RCC_APB1LENR_USART2EN;
@@ -633,10 +634,10 @@ void STM32Serial::commonInit(int id, int baudrate, GpioPin tx, GpioPin rx,
         case 3:
             port=USART3;
             #ifndef _ARCH_CORTEXM7_STM32H7
-            #ifndef _ARCH_CORTEXM4_STM32L4
-            RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
-            #else  //_ARCH_CORTEXM4_STM32L4
+            #if defined(_ARCH_CORTEXM4_STM32L4) || defined(_ARCH_CORTEXM4_STM32G4)
             RCC->APB1ENR1 |= RCC_APB1ENR1_USART3EN;
+            #else  //_ARCH_CORTEXM4_STM32L4
+            RCC->APB1ENR |= RCC_APB1ENR_USART3EN;
             #endif //_ARCH_CORTEXM4_STM32L4
             #else
             RCC->APB1LENR |= RCC_APB1LENR_USART3EN;
@@ -809,7 +810,7 @@ ssize_t STM32Serial::writeBlock(const void *buffer, size_t size, off_t where)
     {
         #if !defined(_ARCH_CORTEXM7_STM32F7) && !defined(_ARCH_CORTEXM7_STM32H7) \
          && !defined(_ARCH_CORTEXM0_STM32F0)   && !defined(_ARCH_CORTEXM4_STM32F3) \
-         && !defined(_ARCH_CORTEXM4_STM32L4)
+         && !defined(_ARCH_CORTEXM4_STM32L4) && !defined(_ARCH_CORTEXM4_STM32G4)
         while((port->SR & USART_SR_TXE)==0) ;
         port->DR=*buf++;
         #else //_ARCH_CORTEXM7_STM32F7/H7
@@ -854,7 +855,7 @@ void STM32Serial::IRQwrite(const char *str)
     {
         #if !defined(_ARCH_CORTEXM7_STM32F7) && !defined(_ARCH_CORTEXM7_STM32H7) \
          && !defined(_ARCH_CORTEXM0_STM32F0)   && !defined(_ARCH_CORTEXM4_STM32F3) \
-         && !defined(_ARCH_CORTEXM4_STM32L4)
+         && !defined(_ARCH_CORTEXM4_STM32L4) && !defined(_ARCH_CORTEXM4_STM32G4)
         while((port->SR & USART_SR_TXE)==0) ;
         port->DR=*str++;
         #else //_ARCH_CORTEXM7_STM32F7/H7
@@ -896,7 +897,7 @@ void STM32Serial::IRQhandleInterrupt()
 {
     #if !defined(_ARCH_CORTEXM7_STM32F7) && !defined(_ARCH_CORTEXM7_STM32H7) \
      && !defined(_ARCH_CORTEXM0_STM32F0)   && !defined(_ARCH_CORTEXM4_STM32F3) \
-     && !defined(_ARCH_CORTEXM4_STM32L4)
+     && !defined(_ARCH_CORTEXM4_STM32L4) && !defined(_ARCH_CORTEXM4_STM32G4)
     unsigned int status=port->SR;
     #else //_ARCH_CORTEXM7_STM32F7/H7
     unsigned int status=port->ISR;
@@ -914,7 +915,7 @@ void STM32Serial::IRQhandleInterrupt()
         //Always read data, since this clears interrupt flags
         #if !defined(_ARCH_CORTEXM7_STM32F7) && !defined(_ARCH_CORTEXM7_STM32H7) \
          && !defined(_ARCH_CORTEXM0_STM32F0)   && !defined(_ARCH_CORTEXM4_STM32F3) \
-         && !defined(_ARCH_CORTEXM4_STM32L4)
+         && !defined(_ARCH_CORTEXM4_STM32L4) && !defined(_ARCH_CORTEXM4_STM32G4)
         c=port->DR;
         #else //_ARCH_CORTEXM7_STM32F7/H7
         c=port->RDR;
@@ -928,7 +929,7 @@ void STM32Serial::IRQhandleInterrupt()
     {
         #if !defined(_ARCH_CORTEXM7_STM32F7) && !defined(_ARCH_CORTEXM7_STM32H7) \
          && !defined(_ARCH_CORTEXM0_STM32F0)   && !defined(_ARCH_CORTEXM4_STM32F3) \
-         && !defined(_ARCH_CORTEXM4_STM32L4)
+         && !defined(_ARCH_CORTEXM4_STM32L4) && !defined(_ARCH_CORTEXM4_STM32G4)
         c=port->DR; //clears interrupt flags
         #else //_ARCH_CORTEXM7_STM32F7/H7
         port->ICR=USART_ICR_IDLECF; //clears interrupt flags
@@ -1026,7 +1027,7 @@ STM32Serial::~STM32Serial()
                 NVIC_DisableIRQ(USART2_IRQn);
                 NVIC_ClearPendingIRQ(USART2_IRQn);
                 #ifndef _ARCH_CORTEXM7_STM32H7
-                #ifdef _ARCH_CORTEXM4_STM32L4
+                #if defined(_ARCH_CORTEXM4_STM32L4) || defined(_ARCH_CORTEXM4_STM32G4)
                 RCC->APB1ENR1 &= ~RCC_APB1ENR1_USART2EN;
                 #else
                 RCC->APB1ENR &= ~RCC_APB1ENR_USART2EN;
@@ -1060,7 +1061,7 @@ STM32Serial::~STM32Serial()
                 NVIC_EnableIRQ(USART3_4_IRQn);
                 #endif //STM32F072xB
                 #ifndef _ARCH_CORTEXM7_STM32H7
-                #ifdef _ARCH_CORTEXM4_STM32L4
+                #if defined(_ARCH_CORTEXM4_STM32L4) || defined(_ARCH_CORTEXM4_STM32G4)
                 RCC->APB1ENR1 &= ~RCC_APB1ENR1_USART3EN;
                 #else
                 RCC->APB1ENR &= ~RCC_APB1ENR_USART3EN;

@@ -46,12 +46,12 @@
 #define SERIAL_DMA
 #endif
 
-#if defined(SERIAL_DMA) && defined(_ARCH_CORTEXM0_STM32F0)
+#if defined(SERIAL_DMA) && (defined(_ARCH_CORTEXM0_STM32F0) || defined(_ARCH_CORTEXM4_STM32G4))
 #undef SERIAL_1_DMA
 #undef SERIAL_2_DMA
 #undef SERIAL_3_DMA
 #undef SERIAL_DMA
-#warning "DMA not yet implemented for STM32F0 family"
+#warning "DMA not yet implemented for this MCU family"
 #endif
 
 namespace miosix {
@@ -249,7 +249,7 @@ private:
     {
         #if !defined(_ARCH_CORTEXM7_STM32F7) && !defined(_ARCH_CORTEXM7_STM32H7) \
          && !defined(_ARCH_CORTEXM0_STM32F0) && !defined(_ARCH_CORTEXM4_STM32F3) \
-         && !defined(_ARCH_CORTEXM4_STM32L4)
+         && !defined(_ARCH_CORTEXM4_STM32L4) && !defined(_ARCH_CORTEXM4_STM32G4)
         while((port->SR & USART_SR_TC)==0) ;
         #else //_ARCH_CORTEXM7_STM32F7/H7
         while((port->ISR & USART_ISR_TC)==0) ;
