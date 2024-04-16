@@ -55,6 +55,7 @@
 #OPT_BOARD := stm32l4r9zi_sensortile
 #OPT_BOARD := stm32f767zi_nucleo
 #OPT_BOARD := stm32f769ni_discovery
+#OPT_BOARD := stm32g474re_nucleo
 
 ##
 ## Optimization flags, choose one.
@@ -650,6 +651,13 @@ ifeq ($(OPT_BOARD),stm32l4r9zi_sensortile)
 
 endif
 
+##---------------------------------------------------------------------------
+## stm32g474re_nucleo
+##
+    CLOCK_FREQ := -DHSE_VALUE=24000000 -DSYSCLK_FREQ_170MHz=170000000
+    #CLOCK_FREQ := -DHSE_VALUE=24000000 -DSYSCLK_FREQ_100MHz=100000000
+    #CLOCK_FREQ := -DHSE_VALUE=24000000 -DSYSCLK_FREQ_84MHz=84000000
+
 ############################################################################
 ## From the options selected above, now fill all the variables needed to  ##
 ## build Miosix. You should modify something here only if you are adding  ##
@@ -753,6 +761,8 @@ else ifeq ($(OPT_BOARD),stm32f767zi_nucleo)
     ARCH := cortexM7_stm32f7
 else ifeq ($(OPT_BOARD),stm32f769ni_discovery)
     ARCH := cortexM7_stm32f7
+else ifeq ($(OPT_BOARD),stm32g474re_nucleo)
+    ARCH := cortexM4_stm32g4
 else
     $(info Error: no board specified in miosix/config/Makefile.inc)
     $(error Error)
@@ -2765,6 +2775,85 @@ else ifeq ($(ARCH),cortexM4_stm32l4)
     $(ARCH_INC)/interfaces-impl/delays.cpp                   \
     arch/common/core/stm32f2_f4_l4_f7_h7_os_timer.cpp        \
     arch/common/CMSIS/Device/ST/STM32L4xx/Source/Templates/system_stm32l4xx.c
+
+##-----------------------------------------------------------------------------
+## ARCHITECTURE: cortexM4_stm32g4
+##
+else ifeq ($(ARCH),cortexM4_stm32g4)
+    ## Base directory with header files for this board
+    ARCH_INC := arch/cortexM4_stm32g4/common
+
+    ##-------------------------------------------------------------------------
+    ## BOARD: stm32g474re_nucleo
+    ##
+    ifeq ($(OPT_BOARD),stm32g474re_nucleo)
+        ## Base directory with header files for this board
+        BOARD_INC := arch/cortexM4_stm32g4/stm32g474re_nucleo
+
+        ## Select linker script and boot file
+        ## Their path must be relative to the miosix directory.
+        BOOT_FILE := $(BOARD_INC)/core/stage_1_boot.o
+        LINKER_SCRIPT := $(BOARD_INC)/stm32_512k+128k_rom.ld
+
+        ## Select architecture specific files
+        ## These are the files in arch/<arch name>/<board name>
+        ARCH_SRC :=                                  \
+        $(BOARD_INC)/interfaces-impl/bsp.cpp
+
+        ## Add a #define to allow querying board name
+        CFLAGS_BASE   += -D_BOARD_STM32G474RE_NUCLEO
+        CXXFLAGS_BASE += -D_BOARD_STM32G474RE_NUCLEO
+
+        ## Select programmer command line
+        ## This is the program that is invoked when the user types
+        ## 'make program'
+        ## The command must provide a way to program the board, or print an
+        ## error message saying that 'make program' is not supported for that
+        ## board.
+        PROGRAM_CMDLINE := echo 'make program not supported.'
+
+    ##-------------------------------------------------------------------------
+    ## End of board list
+    ##
+    endif
+
+    ## Select compiler
+    PREFIX=arm-miosix-eabi-
+
+    ## From compiler prefix form the name of the compiler and other tools
+    CC  := $(PREFIX)gcc
+    CXX := $(PREFIX)g++
+    LD  := $(PREFIX)ld
+    AR  := $(PREFIX)ar
+    AS  := $(PREFIX)as
+    CP  := $(PREFIX)objcopy
+    OD  := $(PREFIX)objdump
+    SZ  := $(PREFIX)size
+
+    ## Select appropriate compiler flags for both ASM/C/C++/linker
+    AFLAGS_BASE   := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+    CFLAGS_BASE   += -D_ARCH_CORTEXM4_STM32G4 $(CLOCK_FREQ) $(XRAM) $(SRAM_BOOT)\
+                     -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+                     $(OPT_OPTIMIZATION) -c
+    CXXFLAGS_BASE += -D_ARCH_CORTEXM4_STM32G4 $(CLOCK_FREQ) $(XRAM) $(SRAM_BOOT)\
+                     -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+                     $(OPT_EXCEPT) $(OPT_OPTIMIZATION) -c
+    LFLAGS_BASE   := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+                     -Wl,--gc-sections,-Map,main.map                            \
+                     -Wl,-T$(KPATH)/$(LINKER_SCRIPT) $(OPT_EXCEPT)              \
+                     $(OPT_OPTIMIZATION) -nostdlib
+
+    ## Select architecture specific files
+    ## These are the files in arch/<arch name>/common
+    ARCH_SRC +=                                              \
+    arch/common/core/interrupts_cortexMx.cpp                 \
+    arch/common/drivers/serial_stm32.cpp                     \
+    $(ARCH_INC)/interfaces-impl/portability.cpp              \
+    $(ARCH_INC)/interfaces-impl/gpio_impl.cpp                \
+    $(ARCH_INC)/interfaces-impl/delays.cpp                   \
+    arch/common/core/stm32f2_f4_l4_f7_h7_os_timer.cpp        \
+    arch/common/CMSIS/Device/ST/STM32G4xx/Source/Templates/system_stm32g4xx.c
+
 ##-----------------------------------------------------------------------------
 ## ARCHITECTURE: cortexM4_atsam4l
 ##
@@ -2842,7 +2931,6 @@ else ifeq ($(ARCH),cortexM4_atsam4l)
     $(ARCH_INC)/interfaces-impl/os_timer.cpp                 \
     $(ARCH_INC)/interfaces-impl/gpio_impl.cpp                \
     $(ARCH_INC)/interfaces-impl/delays.cpp
-    
 
 ##-----------------------------------------------------------------------------
 ## end of architecture list
