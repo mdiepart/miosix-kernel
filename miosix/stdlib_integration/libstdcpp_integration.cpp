@@ -320,12 +320,17 @@ extern "C" void __cxa_guard_abort(__guard *g) noexcept
 
 extern "C" unsigned int libat_quick_lock_n(void *ptr)
 {
+    (void)ptr;
+
     miosix::disableInterrupts();
     return 0;
 }
 
 extern "C" void libat_quick_unlock_n(void *ptr, unsigned int token)
 {
+    (void)ptr;
+    (void)token;
+
     miosix::enableInterrupts();
 }
 

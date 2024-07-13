@@ -101,6 +101,8 @@ static ProcessBase *kernel=nullptr;
  */
 void *idleThread(void *argv)
 {
+    (void)argv;
+
     for(;;)
     {
         if(existDeleted)

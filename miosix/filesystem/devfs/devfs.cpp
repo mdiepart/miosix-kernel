@@ -215,19 +215,30 @@ int Device::isatty() const
 
 ssize_t Device::readBlock(void *buffer, size_t size, off_t where)
 {
+    (void) where;
+
     memset(buffer,0,size); //Act as /dev/zero
     return size;
 }
 
 ssize_t Device::writeBlock(const void *buffer, size_t size, off_t where)
 {
+    (void) buffer;
+    (void) where;
+
     return size; //Act as /dev/null
 }
 
-void Device::IRQwrite(const char *str) {}
+void Device::IRQwrite(const char *str)
+{
+    (void) str;
+}
 
 int Device::ioctl(int cmd, void *arg)
 {
+    (void) cmd;
+    (void) arg;
+    
     return -ENOTTY; //Means the operation does not apply to this descriptor
 }
 

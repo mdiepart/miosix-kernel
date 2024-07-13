@@ -38,11 +38,17 @@ namespace miosix {
 
 ssize_t ARMDCC::readBlock(void* buffer, size_t size, off_t where)
 {
+    (void) buffer;
+    (void) size;
+    (void) where;
+    
     return -EBADF;
 }
 
 ssize_t ARMDCC::writeBlock(const void* buffer, size_t size, off_t where)
 {
+    (void) where;
+
     Lock<FastMutex> l(mutex);
     debugStr(reinterpret_cast<const char*>(buffer),size);
     return size;
@@ -61,6 +67,8 @@ void ARMDCC::IRQwrite(const char* str)
 
 int ARMDCC::ioctl(int cmd, void* arg)
 {
+    (void) arg;
+
     if(cmd==IOCTL_SYNC) return 0; //Nothing to do, but say we did somaething
     return -ENOTTY; //Means the operation does not apply to this descriptor
 }

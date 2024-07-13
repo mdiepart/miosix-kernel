@@ -841,6 +841,8 @@ void STM32Serial::commonInit(int id, int baudrate, GpioPin tx, GpioPin rx,
 
 ssize_t STM32Serial::readBlock(void *buffer, size_t size, off_t where)
 {
+    (void) where;
+
     Lock<FastMutex> l(rxMutex);
     char *buf=reinterpret_cast<char*>(buffer);
     size_t result=0;
@@ -872,6 +874,8 @@ ssize_t STM32Serial::readBlock(void *buffer, size_t size, off_t where)
 
 ssize_t STM32Serial::writeBlock(const void *buffer, size_t size, off_t where)
 {
+    (void) where;
+
     Lock<FastMutex> l(txMutex);
     DeepSleepLock dpLock;
     const char *buf=reinterpret_cast<const char*>(buffer);
