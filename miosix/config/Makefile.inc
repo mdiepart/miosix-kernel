@@ -64,6 +64,7 @@
 #OPT_BOARD := rp2040_raspberry_pi_pico
 #OPT_BOARD := stm32h755zi_nucleo
 #OPT_BOARD := stm32f405_generic
+#OPT_BOARD := nxpmk22f51212_generic
 
 ##
 ## Optimization flags, choose one.
@@ -842,6 +843,12 @@ endif
 
 # No options
 
+##---------------------------------------------------------------------------
+## nxpmk22f51212_generic
+##
+
+# No options
+
 ############################################################################
 ## From the options selected above, now fill all the variables needed to  ##
 ## build Miosix. You should modify something here only if you are adding  ##
@@ -963,6 +970,8 @@ else ifeq ($(OPT_BOARD),stm32h755zi_nucleo)
     ARCH := cortexM7_stm32h7
 else ifeq ($(OPT_BOARD),stm32f405_generic)
     ARCH := cortexM4_stm32f4
+else ifeq ($(OPT_BOARD), nxpmk22f51212_generic)
+    ARCH := cortex_m4_nxpmk22
 else
     $(info Error: no board specified in miosix/config/Makefile.inc)
     $(error Error)
@@ -1975,7 +1984,6 @@ else ifeq ($(ARCH),cortexM4_stm32f4)
         ## board.
         PROG ?= st-flash --connect-under-reset --reset write \
                 $(if $(ROMFS_DIR), image.bin, main.bin) 0x08000000
-
     ##-------------------------------------------------------------------------
     ## End of board list
     ##
@@ -3328,6 +3336,80 @@ else ifeq ($(ARCH),cortexM0plus_rp2040)
     arch/common/core/rp2040_os_timer.cpp                     \
     arch/common/drivers/rp2040_serial.cpp                    \
     arch/common/CMSIS/Device/RaspberryPi/RP2040/Source/system_RP2040.c
+##-----------------------------------------------------------------------------
+## ARCHITECTURE: cortexM4_nxpmk22
+##
+else ifeq ($(ARCH),cortexM4_nxpmk22)
+    ## Base directory with else header files for this board
+    ARCH_INC := arch/cortexM4_nxpmk22/common
+
+    ##-------------------------------------------------------------------------
+    ## BOARD: nxpmk22f51212_generic
+    ##
+    else ifeq ($(OPT_BOARD),nxpmk22f51212_generic)
+        ## Base directory with header files for this board
+        BOARD_INC := arch/cortex_m4_nxpmk22/nxpmk22f51212_generic
+
+        ## Select linker script
+        LINKER_SCRIPT := $(BOARD_INC)/nxp_512k+128k_rom.ld
+
+        ## Select architecture specific files
+        ## These are the files in arch/<arch name>/<board name>
+        ARCH_SRC :=
+        $(BOARD_INC)/core/stage_1_boot.cpp
+        $(BOARD_INC)/interfaces-impl/bsp.cpp
+
+        ## Add a #define to allow querying board name
+        CFLAGS_BASE   += -D_BOARD_NXPMK22F51212_generic -DCPU_MK22FN512VLH12
+        CXXFLAGS_BASE += -D_BOARD_NXPMK22F51212_generic -DCPU_MK22FN512VLH12
+
+        ## Select clock frequency (HSE_VALUE is the xtal on board, fixed)
+        CLOCK_FREQ := -DCPU_XTAL_CLK_HZ=8000000
+
+        ## Select programmer command line
+        ## This is the program that is invoked when the user types
+        ## 'make program'
+        ## The command must provide a way to program the board, or print an
+        ## error message saying that 'make program' is not supported for that
+        ## board.
+        PROG ?= ???? 
+
+    ##-------------------------------------------------------------------------
+    ## End of board list
+    ##
+    endif
+
+    ## Select compiler
+    PREFIX := arm-miosix-eabi-
+    ## This architecture does not support processes
+    #POSTLD :=
+
+    ## Select appropriate compiler flags for both ASM/C/C++/linker
+    CPU := -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+    AFLAGS_BASE   := $(CPU)
+    CFLAGS_BASE   += -D_ARCH_CORTEXM4_NXPMK22 $(CLOCK_FREQ) $(XRAM) \
+                     $(SRAM_BOOT) $(CPU) $(OPT_OPTIMIZATION) -c
+    CXXFLAGS_BASE += -D_ARCH_CORTEXM4_NXPMK22 $(CLOCK_FREQ) $(XRAM) \
+                     $(SRAM_BOOT) $(CPU) $(OPT_OPTIMIZATION) $(OPT_EXCEPT) -c
+    LFLAGS_BASE   := $(CPU) -Wl,--gc-sections,-Map,main.map        \
+                     -Wl,-T$(KPATH)/$(LINKER_SCRIPT) $(OPT_EXCEPT) \
+                     $(OPT_OPTIMIZATION) -nostdlib
+
+    ## Select architecture specific files
+    ## These are the files in arch/<arch name>/common    
+
+    ARCH_SRC +=                                              \
+    arch/common/core/interrupts_cortexMx.cpp                 \
+    arch/common/core/mpu_cortexMx.cpp                        \
+    arch/common/drivers/serial_nxpmk22.cpp                   \
+    arch/common/drivers/dcc.cpp                              \
+    $(ARCH_INC)/interfaces-impl/portability.cpp              \
+    $(ARCH_INC)/interfaces-impl/delays.cpp                   \
+    arch/common/drivers/nxpmk22_gpio.cpp                     \
+    arch/common/core/nxpmk22_os_timer.cpp                     \
+    arch/common/drivers/nxpmk22_serial.cpp                    \
+    arch/common/CMSIS/Device/NXP/MK22FN512xxx12/Source/system_MK22F51212.c
+
 
 ##-----------------------------------------------------------------------------
 ## end of architecture list
