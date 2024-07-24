@@ -78,6 +78,7 @@ typedef Gpio<GPIOB_BASE,14> u3rts;
 /// Pointer to serial port classes to let interrupts access the classes
 static STM32Serial *ports[numPorts]={0};
 
+#ifndef SERIAL1_EXCLUDE
 /**
  * \internal interrupt routine for usart1 actual implementation
  */
@@ -95,9 +96,11 @@ void __attribute__((naked)) USART1_IRQHandler()
     asm volatile("bl _Z13usart1irqImplv");
     restoreContext();
 }
+#endif
 
 #if !defined(STM32_NO_SERIAL_2_3)
 
+#ifndef SERIAL2_EXCLUDE
 /**
  * \internal interrupt routine for usart2 actual implementation
  */
@@ -115,8 +118,10 @@ void __attribute__((naked)) USART2_IRQHandler()
     asm volatile("bl _Z13usart2irqImplv");
     restoreContext();
 }
+#endif
 
 #if !defined(STM32F411xE) && !defined(STM32F401xE) && !defined(STM32F401xC)
+#ifndef SERIAL3_EXCLUDE
 /**
  * \internal interrupt routine for usart3 actual implementation
  */
@@ -142,6 +147,7 @@ void __attribute__((naked)) USART3_4_IRQHandler()
     asm volatile("bl _Z13usart3irqImplv");
     restoreContext();
 }
+#endif //!defined(SERIAL3_EXCLUDE)
 #endif //!defined(STM32F072xB)
 #endif //!defined(STM32F411xE) && !defined(STM32F401xE) && !defined(STM32F401xC)
 #endif //!defined(STM32_NO_SERIAL_2_3)
@@ -541,6 +547,15 @@ void STM32Serial::commonInit(int id, int baudrate, GpioPin tx, GpioPin rx,
     #endif //SERIAL_DMA
     InterruptDisableLock dLock;
     if(id<1|| id>numPorts || ports[id-1]!=0) errorHandler(UNEXPECTED);
+#ifdef SERIAL1_EXCLUDE
+    if(id==1) errorHandler(UNEXPECTED);
+#endif
+#ifdef SERIAL2_EXCLUDE
+    if(id==2) errorHandler(UNEXPECTED);
+#endif
+#ifdef SERIAL3_EXCLUDE
+    if(id==3) errorHandler(UNEXPECTED);
+#endif
     ports[id-1]=this;
     unsigned int freq=SystemCoreClock;
     switch(id)
