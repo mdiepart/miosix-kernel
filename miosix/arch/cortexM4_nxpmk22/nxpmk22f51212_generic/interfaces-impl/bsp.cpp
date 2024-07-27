@@ -31,6 +31,8 @@
 
 #include <peripherals/gpio.h>
 
+extern "C" void bspInit2_callback();
+
 namespace miosix
 {
 
@@ -45,7 +47,8 @@ void IRQbspInit()
 
 void bspInit2()
 {
-
+    // Call possibly defined user function to keep the bsp as generic as possible
+    bspInit2_callback();
 }
 
 //
@@ -64,3 +67,6 @@ void reboot()
 }
 
 } //namespace miosix
+
+// Provide weak definition of bspInit2_callback in case user does not define one
+extern "C" void __attribute__((weak)) bspInit2_callback() {}
